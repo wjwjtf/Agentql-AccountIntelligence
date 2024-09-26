@@ -3,6 +3,8 @@ and extracts the names and titles of Etsy's leadership team."""
 
 import agentql
 from playwright.sync_api import sync_playwright
+import requests
+
 
 # Set the URL to Etsy's main page
 URL = "https://www.etsy.com"
@@ -29,9 +31,19 @@ LEADERSHIP_PAGE_QUERY = """
 }
 """
 
+def start_browser(p):
+    """Starts the browser and returns the browser instance"""
+    ws_response = requests.get("http://127.0.0.1:9222/json/version")
+    WEBSOCKET_URL = ws_response.json()["webSocketDebuggerUrl"]
+    print(f"Connecting to WebSocket URL: {WEBSOCKET_URL}")
+    # Connect to the browser via Chrome DevTools Protocol
+    browser =  p.chromium.connect_over_cdp(WEBSOCKET_URL)
+
+    return browser
+
 def main():
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
+        browser = start_browser(playwright)
         page = agentql.wrap(browser.new_page())
 
         # Navigate to Etsy's main page
